@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PLIS Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div id="main">
+<div id="divmain">
+
+<div id="input_grp">
+    <h1>🚚 PLIS System</h1>
+
+    <select id="source">
+        <option value="">Select Source</option>
+        <option>Delhi</option>
+        <option>Mumbai</option>
+        <option>Bangalore</option>
+        <option>Jaipur</option>
+        <option>Surat</option>
+    </select>
+
+    <select id="destination">
+        <option value="">Select Destination</option>
+        <option>Mumbai</option>
+        <option>Delhi</option>
+        <option>Bangalore</option>
+        <option>Jaipur</option>
+        <option>Surat</option>
+    </select>
+
+    <input id="rest_time" placeholder="Rest Time (hrs)">
+    <button onclick="predictRoute()">🚀 Predict Route</button>
+</div>
+
+<div id="aiContainer"></div>
+<div id="routesContainer"></div>
+<div id="routeDetail"></div>
+
+</div>
+</div>
+
+<!-- ================= SHIPMENT SCREEN ================= -->
+<div id="shipmentScreen">
+
+    <h2>📍 Live Shipment Tracking</h2>
+
+    <iframe id="mapFrame"></iframe>
+
+    <p id="liveETA"></p>
+    <p id="distanceDisplay"></p>
+    <p id="aiMessage"></p>
+
+    <button id="incidentBtn" onclick="toggleIncidentPanel()">⚠ Report Incident</button>
+
+    <div id="incidentPanel">
+        <select id="incidentSeverity">
+            <option value="" disabled selected>Select Incident Severity</option>
+            <option value="10">Minor (+10 min)</option>
+            <option value="25">Moderate (+25 min)</option>
+            <option value="45">Major (+45 min)</option>
+        </select>
+
+        <button onclick="submitIncident()">Submit</button>
+    </div>
+
+    <button id="backBtn" onclick="goBack()">⬅ Back</button>
+
+</div>
+
+<!-- SAME HTML ABOVE — NO CHANGE -->
+
+<script>
+let currentDriver = "A";
+let currentRoutes = [];
+let currentSpeedData = null;
+let baseETA = 0;
+let totalExtraDelay = 0;
+let intervalId = null;
+let lastResponse = null;
+let otpVerified = false;
+
+/* ========================= */
+/* 🔥 RELAY STATE */
+/* ========================= */
+
+
+/* ========================= */
+/* PREDICT */
+/* ========================= */
+async function predictRoute() {
+
+    const source = document.getElementById("source").value;
+    const destination = document.getElementById("destination").value;
+    const rest = document.getElementById("rest_time").value;
+
+    if (!source) return alert("⚠ Select source");
+    if (!destination) return alert("⚠ Select destination");
+    if (source === destination) return alert("⚠ Same location not allowed");
+    if (rest === "" || isNaN(rest) || rest < 0) return alert("⚠ Invalid rest time");
+
+    const res = await fetch("http://127.0.0.1:8000/predict-route", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            source,
+            destination,
+            rest_time: parseInt(rest)
+        })
+    });
+
+    const result = await res.json();
+
+    currentRoutes = result.routes;
+    currentSpeedData = result.live_speed_analysis;
+    lastResponse = result;
+
+    displayRoutes(result);
+}
+
+/* ========================= */
+/* ROUTES */
+/* ========================= */
+function displayRoutes(data) {
+
+    const container = document.getElementById("routesContainer");
+    container.innerHTML = "";
+
+    let bestRoute = "";
+    let bestScore = Infinity;
+
+    data.routes.forEach(route => {
+
+        const div = document.createElement("div");
+
+        div.style.cursor = "pointer";
+        div.style.transition = "0.2s";
+        div.style.border = "1px solid #00ff99";
+        div.style.borderRadius = "10px";
+        div.style.padding = "10px";
+        div.style.marginBottom = "10px";
+
+        div.onmouseover = () => div.style.transform = "scale(1.03)";
+        div.onmouseout = () => div.style.transform = "scale(1)";
+
+        let tag = "";
+        if (route.route === "fastest") tag = "⚡ FASTEST";
+        if (route.route === "safest") tag = "🛡 SAFEST";
+        if (route.route === "cheapest") tag = "💰 CHEAPEST";
+
+        const delay = parseInt(route.delay);
+
+        let weather = delay > 30 ? "🌧 Heavy Rain" :
+                      delay > 15 ? "⛅ Cloudy" : "☀ Clear";
+
+        let impact = delay > 30 ? "Delay HIGH" :
+                     delay > 15 ? "Delay MEDIUM" : "Optimal";
+
+        if (delay < bestScore) {
+            bestScore = delay;
+            bestRoute = route.route;
+        }
+
+        div.innerHTML = `
+            <h2>🚚 ${route.route.toUpperCase()} ${tag}</h2>
+            <p>📏 Distance: ${route.distance}</p>
+            <p>⏱ ETA: ${route.eta}</p>
+            <p>⚠ Delay Risk: ${route.delay}</p>
+            <p>🌦 Weather: ${weather}</p>
+            <p>📊 Status: ${impact}</p>
+            <p style="color:#00ff99">👉 Click to select</p>
+        `;
+
+        div.onclick = () => showRouteDetail(route);
+
+        container.appendChild(div);
+    });
+
+    /* 🔥 AI LINE */
+    /* 🔥 AI INLINE TEXT (NO PANEL LOOK) */
+const aiLine = document.createElement("p");
+
+aiLine.style.color = "#00ff99";
+aiLine.style.fontWeight = "600";
+aiLine.style.margin = "5px 0 10px 0";
+
+aiLine.innerText =
+    `🤖 AI Insight → ${bestRoute.toUpperCase()} route is optimal (low risk + better flow) 🚀`;
+
+const aiContainer = document.getElementById("aiContainer");
+
+aiContainer.innerHTML = `
+    <p style="
+        color:#00ff99;
+        font-weight:600;
+        margin:5px 0 10px 0;
+    ">
+    🤖 AI Insight → ${bestRoute.toUpperCase()} route is optimal (low risk + better flow) 🚀
+    </p>
+`;
+    /* 🔥 RELAY PANEL (WITH DISTANCE LOGIC) */
+    if (data.relay_system && data.relay_system.status === "Recommended") {
+
+        const maxDistance = Math.max(
+            ...data.routes.map(r => parseInt(r.distance))
+        );
+
+        if (maxDistance > 500) {
+
+            const relay = data.relay_system;
+
+            const relayDiv = document.createElement("div");
+
+            relayDiv.style.border = "2px solid orange";
+            relayDiv.style.padding = "10px";
+            relayDiv.style.borderRadius = "10px";
+            relayDiv.style.marginTop = "10px";
+
+            relayDiv.innerHTML = `
+                <h2>🚛 Relay Mode Recommended</h2>
+                <p>📉 ETA: ${relay.new_eta}</p>
+                <p>💡 ${relay.benefit}</p>
+
+                <label style="color:orange; cursor:pointer;">
+                    <input type="checkbox" id="relayCheck">
+                    👉 Enable Relay Mode
+                </label>
+            `;
+
+            container.appendChild(relayDiv);
+        }
+    }
+}
+
+/*driver updates*/
+function updateDriverUI(driver){
+
+    const a = document.getElementById("driverA");
+    const b = document.getElementById("driverB");
+
+    if(!a || !b) return;
+
+    a.classList.remove("driver-active");
+    b.classList.remove("driver-active");
+
+    if(driver === "A"){
+        a.classList.add("driver-active");
+    }else if(driver === "B"){
+        b.classList.add("driver-active");
+    }
+}
+
+
+async function autoSyncDriver(){
+    try{
+        const res = await fetch("http://127.0.0.1:8000/relay-status");
+        const data = await res.json();
+
+        if(data.enabled){
+    currentDriver = data.current_driver;
+
+    updateDriverUI(currentDriver);   // 🔥 NEW
+}
+    }catch(err){
+        console.log("sync error", err);
+    }
+}
+
+/* ========================= */
+/* ROUTE SELECT */
+/* ========================= */
+function showRouteDetail(route) {
+
+    document.getElementById("routeDetail").innerHTML = `
+        <h2>📌 Selected: ${route.route.toUpperCase()}</h2>
+
+        <button onclick="startShipmentWithRelay(${route.base_eta_hours}, '${route.distance}')">
+            🚀 Start Shipment
+        </button>
+    `;
+}
+
+/* ========================= */
+/* START SHIPMENT */
+/* ========================= */
+function startShipment(eta, distance) {
+
+    document.getElementById("main").style.display = "none";
+    document.getElementById("shipmentScreen").style.display = "flex";
+
+    if (intervalId) clearInterval(intervalId);
+
+    const source = document.getElementById("source").value;
+    const destination = document.getElementById("destination").value;
+
+    document.getElementById("mapFrame").src =
+        `https://www.google.com/maps?q=${source}+to+${destination}&output=embed`;
+
+    baseETA = parseFloat(eta);
+    totalExtraDelay = 0;
+
+    document.getElementById("liveETA").innerText =
+        "🟢 Initial ETA: " + eta + " hr";
+
+    document.getElementById("distanceDisplay").innerText =
+        "📏 Distance: " + distance;
+
+    displayLiveSpeed();
+
+    // ❌ REMOVE THIS LINE
+    // activateRelay();
+
+    simulateAIUpdates();
+}
+function startShipmentWithRelay(eta, distance){
+
+    startShipment(eta, distance);
+
+    const relayChecked = document.getElementById("relayCheck");
+
+    if(relayChecked && relayChecked.checked){
+        activateRelay();
+    }
+}
+
+/*otp verification*/
+async function verifyOTP(){
+
+    if(otpVerified) return;   // 🔥 prevent double call
+
+    try{
+
+        const otpA = document.getElementById("otpA").value;
+        const otpB = document.getElementById("otpB").value;
+
+        if(!otpA || !otpB){
+            return alert("⚠ Enter both OTPs");
+        }
+
+        const res = await fetch("http://127.0.0.1:8000/verify-otp", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                otp_a: otpA,
+                otp_b: otpB
+            })
+        });
+
+        const data = await res.json();
+
+        if(data.status === "verified"){
+
+            otpVerified = true;   // 🔥 lock
+
+            alert("✅ " + data.gemma_verification);
+
+            // 🔥 DRIVER UPDATE
+            updateDriverUI(data.current_driver);
+
+            // 🔥 RESET PANEL
+            const qrBox = document.getElementById("qrBox");
+            if(qrBox){
+                qrBox.innerHTML = "";
+                qrBox.style.display = "none";
+            }
+
+        }else{
+            alert("❌ " + data.gemma_verification);
+        }
+
+    }catch(err){
+        console.log(err);
+        alert("OTP verification failed");
+    }
+
+    const progress = document.getElementById("handoverProgress");
+
+if(progress){
+    progress.style.width = "100%";
+
+    setTimeout(() => {
+        progress.style.width = "0%";   // reset for next handover
+    }, 1500);
+}
+}/* ========================= */
+/* 🔥 RELAY UI */
+/* ========================= */
+function activateRelay(){
+
+    if(document.getElementById("relayBox")) return;
+
+    const div = document.createElement("div");
+    div.id = "relayBox";
+
+    div.style.marginTop = "15px";
+    div.style.border = "2px solid orange";
+    div.style.padding = "10px";
+    div.style.borderRadius = "10px";
+
+    div.innerHTML = `
+        <h3>🚛 Relay Mode</h3>
+
+        <p>
+            Drivers:
+            <span id="driverA" class="driver-badge driver-active">A</span>
+            →
+            <span id="driverB" class="driver-badge">B</span>
+        </p>
+
+        <!-- 🔥 ADDED: PROGRESS BAR -->
+        <div class="progress-bar" style="margin-bottom:10px;">
+            <div id="handoverProgress" class="progress-fill"></div>
+        </div>
+
+        <button id="handoverBtn">🔄 Handover</button>
+        <button id="qrBtn">📦 Generate QR</button>
+
+        <div id="qrBox"
+             style="
+                margin-top:10px;
+                display:none;
+                max-height:200px;
+                overflow-y:auto;
+                padding-right:5px;
+             ">
+        </div>
+    `;
+
+    document.getElementById("shipmentScreen").appendChild(div);
+
+    document.getElementById("handoverBtn").className = "incidentBtnStyle";
+    document.getElementById("qrBtn").className = "incidentBtnStyle";
+
+    document.getElementById("handoverBtn").onclick = () => {
+        alert("🔐 Complete QR + OTP verification");
+    };
+
+    document.getElementById("qrBtn").onclick = generateQR;
+
+    // 🔥 AUTO SYNC
+    setInterval(autoSyncDriver, 2000);
+}/* ========================= */
+/*qr generate*/
+async function generateQR(){
+
+    try{
+
+        const res = await fetch("http://127.0.0.1:8000/generate-qr", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                driver_from: "A",
+                driver_to: "B",
+                package: "PKG123",
+                route: "Delhi → Mumbai"
+            })
+        });
+
+        const data = await res.json();
+
+        // 🔥 SAVE QR
+        window.latestQR = data.qr_payload;
+
+        const box = document.getElementById("qrBox");
+        box.style.display = "block";
+
+        box.innerHTML = `
+            <p style="color:#00ff99;">📦 QR Generated</p>
+            <pre>${JSON.stringify(data.qr_payload, null, 2)}</pre>
+
+            <button onclick="verifyQR()" class="incidentBtnStyle">
+    🔍 Verify QR
+</button>
+        `;
+
+    }catch(err){
+        console.log(err);
+        alert("QR generation failed");
+    }
+}
+
+/* verification of qr*/
+
+async function verifyQR(){
+
+    try{
+
+        const res = await fetch("http://127.0.0.1:8000/verify-qr", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(window.latestQR)
+        });
+
+        const data = await res.json();
+
+        if(data.status === "otp_required"){
+
+            alert("✅ QR verified. Enter OTP now");
+
+            // 🔥 FIX 1: CLEAN PREVIOUS UI (IMPORTANT)
+            const qrBox = document.getElementById("qrBox");
+            if(qrBox){
+                qrBox.innerHTML = "";   // old QR / buttons remove
+                qrBox.style.display = "block";
+            }
+
+            // 🔥 FIX 2: ONLY NOW SHOW OTP UI
+            showOTPUI();
+
+        }else{
+
+            // 🔥 FIX 3: FAIL CASE → RESET UI
+            const qrBox = document.getElementById("qrBox");
+            if(qrBox){
+                qrBox.innerHTML = "";
+                qrBox.style.display = "none";
+            }
+
+            alert("❌ " + data.gemma_verification);
+        }
+
+    }catch(err){
+        console.log(err);
+        alert("QR verification failed");
+    }
+}
+/* 🔄 HANDOVER */
+/* ========================= */
+function handover(){
+    document.getElementById("verifyBox").style.display = "block";
+}
+/*otp required*/
+function showOTPUI(){
+
+    const box = document.getElementById("qrBox");
+
+    box.innerHTML += `
+        <div style="margin-top:10px; display:flex; flex-direction:column; gap:8px;">
+
+            <input id="otpA" placeholder="OTP A"
+                style="
+                    padding:8px;
+                    border-radius:6px;
+                    border:1px solid #00ff99;
+                    background:#0f0f0f;
+                    color:#00ff99;
+                ">
+
+            <input id="otpB" placeholder="OTP B"
+                style="
+                    padding:8px;
+                    border-radius:6px;
+                    border:1px solid #00ff99;
+                    background:#0f0f0f;
+                    color:#00ff99;
+                ">
+
+            <button type="button" onclick="verifyOTP()" class="incidentBtnStyle">🔐 Verify OTP</button>
+                🔐 Verify OTP
+            </button>
+
+        </div>
+    `;
+}
+/* ========================= */
+/* ✅ VERIFY */
+/* ========================= */
+
+/* ========================= */
+/* LIVE SPEED */
+/* ========================= */
+function displayLiveSpeed() {
+
+    if (!currentSpeedData) return;
+
+    document.getElementById("aiMessage").innerHTML = `
+        🚗 Speed: ${currentSpeedData.current_speed} <br>
+        📊 Status: ${currentSpeedData.status} <br>
+        ⏱ Impact: ${currentSpeedData.eta_change}
+    `;
+}
+
+/* ========================= */
+/* ETA */
+/* ========================= */
+function simulateAIUpdates() {
+
+    intervalId = setInterval(() => {
+
+        const randomDelay = Math.floor(Math.random() * 10);
+
+        totalExtraDelay += randomDelay;
+
+        const newETA = (baseETA + totalExtraDelay / 60).toFixed(1);
+
+        document.getElementById("liveETA").innerText =
+            "🔄 +" + totalExtraDelay + " min | 🧮 Total ETA: " + newETA + " hr";
+
+    }, 5000);
+}
+
+/* ========================= */
+/* INCIDENT */
+/* ========================= */
+async function submitIncident(){
+
+    const map = {10:"low",25:"medium",45:"high"};
+    const val = document.getElementById("incidentSeverity").value;
+
+    if (!val) return alert("⚠ Select severity");
+
+    const severity = map[val];
+    const location = document.getElementById("source").value;
+
+    await fetch("http://127.0.0.1:8000/simulate/incident", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({location, severity})
+    });
+
+    totalExtraDelay += parseInt(val);
+
+    alert("🚧 Incident Synced");
+
+    document.getElementById("incidentPanel").style.display = "none";
+    document.getElementById("incidentSeverity").value = "";
+}
+
+/* ========================= */
+/* BACK */
+/* ========================= */
+function goBack(){
+
+    if (intervalId) clearInterval(intervalId);
+
+    document.getElementById("shipmentScreen").style.display = "none";
+    document.getElementById("main").style.display = "flex";
+}
+
+/* ========================= */
+/* TOGGLE */
+/* ========================= */
+function toggleIncidentPanel() {
+
+    const panel = document.getElementById("incidentPanel");
+
+    panel.style.display = panel.style.display === "block" ? "none" : "block";
+}
+
+</script>
+
+</body>
+</html>
