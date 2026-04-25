@@ -1,0 +1,466 @@
+/* RESET */
+*{
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+/* BODY */
+body{
+    height: 100vh;
+    background:url(rout.png) no-repeat center/cover fixed;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+/* MAIN */
+#main{
+    width:100%;
+    display:flex;
+    justify-content:center;
+}
+
+/* MAIN BOX */
+#divmain{
+    width:80%;
+    padding:25px;
+
+    border-radius:16px;
+
+    background: rgba(255,255,255,0.10);
+    backdrop-filter: blur(10px);
+
+    border:1px solid rgba(0,200,120,0.4);
+
+    box-shadow:
+        0 0 25px rgba(0,200,120,0.5),
+        inset 0 0 12px rgba(255,255,255,0.15);
+
+    transition:0.3s;
+}
+
+/* REMOVE EMPTY BOX */
+#routesContainer:empty,
+#routeDetail:empty{
+    display:none;
+}
+
+/* TITLE */
+h1{
+    text-align:center;
+    font-size:34px;
+
+    color:#0c3f2e;
+
+    text-shadow:
+        0 0 6px rgba(0,255,150,0.4);
+}
+
+/* WEATHER BOX (NEW FIX) */
+#weatherBox{
+    margin-top:10px;
+    text-align:center;
+    font-size:18px;
+
+    color:#0a3a2b;
+
+    font-weight:600;
+
+    text-shadow:
+        0 0 6px rgba(0,255,150,0.4);
+}
+
+/* INPUT GROUP */
+#input_grp{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    align-items:center;
+
+    margin-bottom:20px;
+}
+
+/* INPUT */
+input, select{
+    width:75%;
+    padding:12px;
+
+    font-size:16px;
+
+    background: rgba(255,255,255,0.15);
+    border:1.5px solid rgba(0,200,120,0.5);
+    border-radius:10px;
+
+    color:#053d2a;
+    text-align:center;
+
+    backdrop-filter: blur(5px);
+
+    transition:0.3s;
+    font-weight:600;
+}
+
+/* DROPDOWN */
+select option{
+    background:#0b2a20;
+    color:#bfffe5;
+}
+
+/* PLACEHOLDER */
+input::placeholder{
+    color:#1f7a5b;
+}
+
+/* HOVER */
+input:hover, select:hover{
+    transform:scale(1.05);
+    box-shadow:0 0 10px rgba(0,200,120,0.6);
+}
+
+/* BUTTON */
+button{
+    padding:12px 24px;
+    font-size:16px;
+
+    background: rgba(0,200,120,0.25);
+    border:1.5px solid rgba(0,200,120,0.6);
+    border-radius:10px;
+
+    color:#053d2a;
+    font-weight:600;
+
+    cursor:pointer;
+
+    transition:0.3s;
+
+    box-shadow:0 0 10px rgba(0,200,120,0.5);
+}
+
+button:hover{
+    transform:scale(1.08);
+    background: rgba(0,200,120,0.4);
+    box-shadow:0 0 18px rgba(0,200,120,0.9);
+}
+
+/* ROUTES */
+#routesContainer{
+    display:flex;
+    gap:20px;
+    margin-top:20px;
+}
+
+#routesContainer div{
+    flex:1;
+    padding:18px;
+
+    border-radius:14px;
+    border:1.5px solid rgba(0,200,120,0.6);
+
+    background: rgba(255,255,255,0.10);
+
+    color:#063d2b;
+    text-align:center;
+
+    font-size:15px;
+    font-weight:600;
+
+    transition:0.3s;
+}
+
+#routesContainer div h2{
+    font-size:20px;
+    margin-bottom:8px;
+}
+
+#routesContainer div:hover{
+    transform:scale(1.06);
+    box-shadow:0 0 20px rgba(0,200,120,0.9);
+}
+
+/* ROUTE DETAIL */
+#routeDetail{
+    margin-top:20px;
+    padding:18px;
+
+    border-radius:14px;
+    border:1.5px solid rgba(0,200,120,0.6);
+
+    background: rgba(255,255,255,0.10);
+
+    color:#063d2b;
+    text-align:center;
+
+    font-size:15px;
+    font-weight:600;
+
+    box-shadow:0 0 15px rgba(0,200,120,0.7);
+}
+
+/* ========================= */
+/* MAP SCREEN */
+/* ========================= */
+
+#shipmentScreen{
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+
+    background:rgba(0,0,0,0.75);
+
+    color:#d2ffe9;
+}
+
+/* MAP TITLE */
+#shipmentScreen h2{
+    font-size:26px;
+
+    color:#d2ffe9;
+
+    text-shadow:
+        0 0 6px rgba(0,255,150,0.6),
+        2px 2px 6px rgba(0,0,0,0.9);
+}
+
+/* ETA */
+#liveETA{
+    margin-top:12px;
+    font-size:20px;
+
+    color:#b8ffe0;
+
+    background: rgba(0,0,0,0.5);
+    padding:10px 18px;
+    border-radius:10px;
+
+    backdrop-filter: blur(6px);
+
+    text-shadow:
+        0 0 6px rgba(0,255,150,0.6),
+        2px 2px 6px rgba(0,0,0,0.9);
+}
+
+/* DISTANCE */
+#distanceDisplay{
+    margin-top:8px;
+    font-size:16px;
+    color:#b8ffe0;
+}
+
+/* MAP */
+#mapFrame{
+    width:80%;
+    height:420px;
+
+    border-radius:12px;
+    border:2px solid rgba(0,200,120,0.7);
+
+    box-shadow:0 0 18px rgba(0,200,120,0.7);
+}
+
+/* INCIDENT BUTTON */
+#incidentBtn{
+    position:fixed;
+    bottom:20px;
+    left:20px;
+
+    background:#ff3b3b;
+    color:white;
+
+    padding:12px 16px;
+    border-radius:10px;
+
+    cursor:pointer;
+
+    font-weight:600;
+
+    box-shadow:0 0 12px rgba(255,0,0,0.8);
+}
+
+/* INCIDENT PANEL */
+#incidentPanel{
+    position:fixed;
+    bottom:80px;
+    left:20px;
+
+    width:260px;
+    padding:15px;
+
+    border-radius:12px;
+    border:1.5px solid rgba(0,200,120,0.6);
+
+    background:rgba(0,0,0,0.65);
+    backdrop-filter: blur(6px);
+
+    display:none;
+}
+
+/* INCIDENT INPUT */
+#incidentPanel input{
+    width:100%;
+    margin-bottom:10px;
+
+    color:#29c17f;
+
+    text-shadow:
+        0 0 4px rgba(0,255,150,0.5),
+        2px 2px 6px rgba(0,0,0,0.9);
+}
+
+/* PLACEHOLDER */
+#incidentPanel input::placeholder{
+    color:#b8ffe0;  /* SAME AS SUBMIT TEXT */
+
+    opacity:1; /* IMPORTANT: removes default fading */
+
+    text-shadow:
+        0 0 6px rgba(0,255,150,0.6),
+        2px 2px 6px rgba(0,0,0,0.9);
+}
+
+/* SUBMIT BUTTON */
+#incidentPanel button{
+    width:100%;
+    padding:10px;
+
+    border-radius:8px;
+    border:1.5px solid rgba(0,200,120,0.6);
+
+    background: rgba(0,0,0,0.5);
+
+    color:#b8ffe0;
+
+    cursor:pointer;
+
+    box-shadow:0 0 10px rgba(0,200,120,0.6);
+}
+
+#incidentPanel button:hover{
+    transform:scale(1.05);
+    box-shadow:0 0 18px rgba(0,200,120,0.9);
+}
+
+/* BACK BUTTON */
+#backBtn{
+    position:fixed;
+    bottom:20px;
+    right:20px;
+
+    padding:10px 16px;
+
+    border-radius:10px;
+    border:1.5px solid rgba(0,200,120,0.6);
+
+    background: rgba(0,0,0,0.5);
+
+    color:#b8ffe0;
+
+    cursor:pointer;
+
+    backdrop-filter: blur(6px);
+
+    text-shadow:
+        0 0 4px rgba(0,255,150,0.5),
+        2px 2px 6px rgba(0,0,0,0.9);
+
+    box-shadow:0 0 10px rgba(0,200,120,0.5);
+
+    transition:0.3s;
+}
+
+#backBtn:hover{
+    transform:scale(1.05);
+    box-shadow:0 0 18px rgba(0,200,120,0.9);
+}
+#incidentPanel select{
+    color:#b8ffe0;
+
+    text-shadow:
+        0 0 6px rgba(0,255,150,0.6),
+        2px 2px 6px rgba(0,0,0,0.9);
+}
+
+/* dropdown options */
+#incidentPanel select option{
+    color:#b8ffe0;
+    background:#0b2a20;
+}
+
+#shipmentScreen {
+    display: none;
+}
+
+#dashboard {
+    display: flex;
+    height: 100vh;
+    background: #0b0f1a;
+    color: white;
+}
+
+#sidebar {
+    width: 220px;
+    background: #111827;
+    padding: 20px;
+}
+
+#mapSection {
+    flex: 1;
+}
+
+#mapFrame {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+#rightPanel {
+    width: 300px;
+    background: #111827;
+    padding: 20px;
+}
+.incidentBtnStyle {
+    background: #00ff99;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.driver-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid #555;
+    color: #aaa;
+    transition: all 0.3s ease;
+}
+
+.driver-active {
+    border-color: #00ff99;
+    color: #00ff99;
+    box-shadow: 0 0 10px #00ff99;
+    transform: scale(1.1);
+}
+.progress-bar {
+    width: 100%;
+    height: 6px;
+    background: #333;
+    border-radius: 10px;
+    margin-top: 10px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    width: 0%;
+    background: #00ff99;
+    transition: width 1s ease;
+}
