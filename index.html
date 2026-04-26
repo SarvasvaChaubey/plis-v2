@@ -116,7 +116,7 @@ async function predictRoute() {
     if (source === destination) return alert("⚠ Same location not allowed");
     if (rest === "" || isNaN(rest) || rest < 0) return alert("⚠ Invalid rest time");
 
-    const res = await fetch("http://127.0.0.1:8000/predict-route", {
+    const res = await fetch("https://backend-x2ga.onrender.com/predict-route", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
@@ -271,7 +271,7 @@ function updateDriverUI(driver){
 
 async function autoSyncDriver(){
     try{
-        const res = await fetch("http://127.0.0.1:8000/relay-status");
+        const res = await fetch("https://backend-x2ga.onrender.com/relay-status");
         const data = await res.json();
 
         if(data.enabled){
@@ -355,7 +355,7 @@ async function verifyOTP(){
             return alert("⚠ Enter both OTPs");
         }
 
-        const res = await fetch("http://127.0.0.1:8000/verify-otp", {
+        const res = await fetch("https://backend-x2ga.onrender.com/verify-otp", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({
@@ -463,7 +463,7 @@ async function generateQR(){
 
     try{
 
-        const res = await fetch("http://127.0.0.1:8000/generate-qr", {
+        const res = await fetch("https://backend-x2ga.onrender.com/generate-qr", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({
@@ -503,7 +503,7 @@ async function verifyQR(){
 
     try{
 
-        const res = await fetch("http://127.0.0.1:8000/verify-qr", {
+        const res = await fetch("https://backend-x2ga.onrender.com/verify-qr", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify(window.latestQR)
@@ -630,7 +630,7 @@ async function submitIncident(){
     const severity = map[val];
     const location = document.getElementById("source").value;
 
-    await fetch("http://127.0.0.1:8000/simulate/incident", {
+    await fetch("https://backend-x2ga.onrender.com/simulate/incident", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({location, severity})
