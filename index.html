@@ -83,6 +83,21 @@ let lastResponse = null;
 let otpVerified = false;
 
 /* ========================= */
+function calculateCost(distance){
+    const mileage = 20;      // km per liter (you can tune)
+    const fuelPrice = 100;   // ₹ per liter (can be dynamic later)
+
+    const dist = parseInt(distance);
+
+    const fuelNeeded = dist / mileage;
+    const baseCost = fuelNeeded * fuelPrice;
+
+    const segments = dist / 10;
+    const extraCost = baseCost * (0.05 * segments);
+
+    return Math.round(baseCost + extraCost);
+}
+
 /* 🔥 RELAY STATE */
 /* ========================= */
 
@@ -151,6 +166,7 @@ function displayRoutes(data) {
         if (route.route === "cheapest") tag = "💰 CHEAPEST";
 
         const delay = parseInt(route.delay);
+        const cost = calculateCost(route.distance);
 
         let weather = delay > 30 ? "🌧 Heavy Rain" :
                       delay > 15 ? "⛅ Cloudy" : "☀ Clear";
@@ -163,16 +179,16 @@ function displayRoutes(data) {
             bestRoute = route.route;
         }
 
-        div.innerHTML = `
-            <h2>🚚 ${route.route.toUpperCase()} ${tag}</h2>
-            <p>📏 Distance: ${route.distance}</p>
-            <p>⏱ ETA: ${route.eta}</p>
-            <p>⚠ Delay Risk: ${route.delay}</p>
-            <p>🌦 Weather: ${weather}</p>
-            <p>📊 Status: ${impact}</p>
-            <p style="color:#00ff99">👉 Click to select</p>
-        `;
-
+    div.innerHTML = `
+    <h2>🚚 ${route.route.toUpperCase()} ${tag}</h2>
+    <p>📏 Distance: ${route.distance}</p>
+    <p>⏱ ETA: ${route.eta}</p>
+    <p>💰 Cost: ₹${cost} (approx)</p>
+    <p>⚠ Delay Risk: ${route.delay}</p>
+    <p>🌦 Weather: ${weather}</p>
+    <p>📊 Status: ${impact}</p>
+    <p style="color:#00ff99">👉 Click to select</p>
+`;
         div.onclick = () => showRouteDetail(route);
 
         container.appendChild(div);
